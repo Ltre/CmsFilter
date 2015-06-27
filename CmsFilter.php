@@ -70,16 +70,19 @@ dump($conds);
 /**
  * 存储方式二（简洁易用，推荐）
  */
+print '<br><br><br>------------------------------条件结构与解码测试-------------------------<br><br><br>';
 //条件结构
 $conds = array('&',
 	array('A.a', 'in', '(1,2)'),
-    array('A.b', 'like', '%hehe%'),
+    array('A.b', 'like', '%hehe中文%'),
     array('A.c', '>', '2015-06-25'),
     array('|',
         array('A.d', '<', 0),
         array('A.d', '>', 100),
     )
 );
+//JS格式
+echo json_encode($conds).'<br>';
 //条件解码
 function parseConds($conds){
     $str = '';
@@ -114,6 +117,7 @@ print $conds2.'<br>';
  * 筛选器结构
  * 依次是：选取域、条件、排序、条目限制
  */
+print '<br><br><br>------------------------------筛选器结构与解码测试-------------------------<br><br><br>';
 $filter = array(
     'id' => 1,
     'name' => '筛选器名称',
@@ -143,12 +147,14 @@ echo $result.'<br>';
 /**
  * 查看序列化的筛选器
  */
+print '<br><br><br>------------------------------序列化筛选器测试-------------------------<br><br><br>';
 echo serialize($filter).'<br>';
 
 
 /**
  * 管理筛选器
  */
+print '<br><br><br>------------------------------管理筛选器测试-------------------------<br><br><br>';
 class FilterManager {
     static public function save($filter){
         file_put_contents(DI_CACHE_PATH.$filter['id'].'.cmsfilter', serialize($filter));
@@ -164,3 +170,17 @@ $id = $filter['id'];
 FilterManager::save($filter);
 $tmpFilter = FilterManager::read($id);
 dump($tmpFilter);
+
+
+
+
+
+
+/**
+ * 前端传入参数测试
+ */
+print '<br><br><br>------------------------------前端传入参数测试-------------------------<br><br><br>';
+$conds = '["&",["A.a","in","(1,2)"],["A.b","like","%hehe\u4e2d\u6587%"],["A.c",">","2015-06-25"],["|",["A.d","<",0],["A.d",">",100]]]';
+$conds = json_decode($conds, 1);
+dump($conds);
+
