@@ -84,25 +84,29 @@ $conds = array('&',
 //JS格式
 echo json_encode($conds).'<br>';
 //条件解码
-function parseConds($conds){
-    $str = '';
-    $len = count($conds);
-    $blank = $conds[0] == '&' ? '1=1' : ($conds[0] != '|' ?: '1<>1');
-    $logic = $conds[0] == '&' ? 'AND' : ($conds[0] != '|' ?: 'OR');
-    foreach ($conds as $k => $c) {
-        if ($k == 0) {
-            $str .= " ( {$blank} ";
-        } else {
-            if (in_array($c[0], array('&', '|'))) {
-                $str .= parseConds($c);
+function parseConds($conds, $condsType = 'array'){
+        if ('json' == $condsType) { $conds = json_decode($conds, 1); }
+        $conds = $this->buildRealConds($conds);
+        
+        $where = '';
+        $len = count($conds);
+        $blank = $conds[0] == '&' ? '1=1' : ($conds[0] != '|' ?: '1<>1');
+        $logic = $conds[0] == '&' ? 'AND' : ($conds[0] != '|' ?: 'OR');
+        foreach ($conds as $k => $c) {
+            if ($k == 0) {
+                $where .= " ( {$blank} ";
             } else {
-                $quote = strcasecmp($c[1], 'IN') ? (is_string($c[2]) ? '"' : '') : '';
-                $str .= " {$logic} {$c[0]} {$c[1]} {$quote}{$c[2]}{$quote} ";
+                if (in_array($c[0], array('&', '|'))) {
+                    $where .= " {$logic} " . parseConds($c);
+                } else {
+                    $inOrNot = strcasecmp($c[1], 'IN') && strcasecmp($c[1], 'NOT IN');
+                    $quote = $inOrNot ? (is_string($c[2]) ? '"' : '') : '';
+                    $where .= " {$logic} {$c[0]} {$c[1]} {$quote}{$c[2]}{$quote} ";
+                }
             }
+            if ($k == $len - 1) $where .= ' ) ';
         }
-        if ($k == $len - 1) $str .= ' ) ';
-    }
-    return $str;
+        return $where;
 }
 //测试
 $conds2 = parseConds($conds);
